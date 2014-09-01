@@ -34,6 +34,11 @@ impl<'a> Encoder<'a> {
     }
 }
 
+pub fn encode<'a, T>(object: &T) -> String
+  where T: Encodable<Encoder<'a>, IoError> {
+    str::from_utf8(Encoder::buffer_encode(object).as_slice()).unwrap().to_string()
+}
+
 type EncodeResult = Result<(), IoError>;
 
 // TODO: endianness and whatnot
@@ -230,13 +235,19 @@ impl<'a> Decoder<'a> {
         Decoder { reader: reader }
     }
 
-    pub fn buffer_decode<'a, T>(v: Vec<u8>) -> DecodeResult<T>
+    pub fn buffer_decode<T>(v: Vec<u8>) -> DecodeResult<T>
       where T: Decodable<Decoder<'a>, DecodeError> {
         let mut reader = MemReader::new(v);
         let mut decoder = Decoder::new(unsafe { mem::transmute(&mut reader as &mut Reader) });
 
         Decodable::decode(&mut decoder)
     }
+}
+
+pub fn decode<'a, T>(s: &str) -> DecodeResult<T>
+  where T: Decodable<Decoder<'a>, DecodeError> {
+    let v = s.as_bytes().to_vec();
+    Decoder::buffer_decode(v)
 }
 
 pub type DecodeResult<T> = Result<T, DecodeError>;
