@@ -291,7 +291,7 @@ impl<'a> serialize::Decoder<DecodeError> for Decoder<'a> {
 
     prim_impl!(read_f64,  f64,  8)
     prim_impl!(read_f32,  f32,  4)
-    prim_impl!(read_char, char, 8)
+    prim_impl!(read_char, char, 4)
 
     fn read_str(&mut self) -> DecodeResult<String> {
         debug!("read_str");
@@ -443,7 +443,7 @@ mod test {
     use std::collections::HashMap;
 
     #[test]
-    fn cycle_maps() {
+    fn cycle_map() {
         let mut x = HashMap::new();
         x.insert(vec![1i, 2i], "hello world".to_string());
         x.insert(vec![5i, -3i], "potato".to_string());
@@ -489,6 +489,18 @@ mod test {
         println!("Str:  {}", String::from_utf8_lossy(enc.as_slice()));
 
         let dec: DecodeResult<Foo> = Decoder::buffer_decode(enc);
+        println!("To:   {}", dec);
+
+        assert_eq!(dec, Ok(x));
+    }
+
+    #[test]
+    fn cycle_char() {
+        let x = 'á';
+        let enc = Encoder::buffer_encode(&x);
+        println!("From: {}", enc);
+
+        let dec: DecodeResult<char> = Decoder::buffer_decode(enc);
         println!("To:   {}", dec);
 
         assert_eq!(dec, Ok(x));
